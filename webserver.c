@@ -41,7 +41,7 @@ void get_file(int newsockfd, char * path) {
     "Content-type: text/html\n"
     "\n"
     "<html><body><h1><b>404 File not found\n</b></h1></body></html>";
-    
+   
     char response[2048];
     int filefd = -1;
     char * header;
@@ -51,11 +51,12 @@ void get_file(int newsockfd, char * path) {
     memset(response, 0, 2048);	//reset memory
 
     filefd = open(++path, O_RDONLY );
-    printf("Result of open: %d\n", filefd);
+    //printf("Result of open: %d\n", filefd);
 
     //File not found
 
-    if ( filefd < 0 ){ 	
+    if ( filefd < 0 ){ 
+	//printf("%s", MISS);
 	write(newsockfd, MISS, 2048); 
 	error("ERROR, file can't be retrieved");
     }
@@ -110,7 +111,7 @@ void request_handler(int newsockfd) {
     char path[sizeof(buffer)];
     
     sscanf(buffer, "%s %s %s", method, path, protocol);
-    //printf( "%s\n",buffer);
+    printf( "%s\n",buffer);
 
     // Ensure accepted protocol
     if (strcmp(protocol, "HTTP/1.1") || strcmp(protocol, "HTTP/1.0") ){
