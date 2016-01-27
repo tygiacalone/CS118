@@ -16,29 +16,7 @@ void error(char *msg)
     exit(1);
 }
 
-void get_file(int newsockfd, char * path) {
-    //printf("Getting file %s!\n", path);
-    int filefd = -1;
-    char * OK = "HTTP/1.1 200 OK\n"
-    "Content-type: %s\n";
-    char * MISS = "HTTP/1.1 404 NOT FOUND\n"
-    "Content-type: text/html\n"
-    "\n"
-    "<html><body><h1><b>404 File not found\n</b></h1></body></html>";
-    char response[2048];
-    char * header;
-    int i = 0;
-    char c;
-
-    memset(response, 0, 2048);	//reset memory
-
-    filefd = open(++path, O_RDONLY );
-    printf("Result of open: %d\n", filefd);
-
-    if ( filefd < 0 ){
-	write(newsockfd, MISS, 2048); 
-	error("ERROR, file can't be retrieved");
-    }
+char * getExt(char * path) {
 
     char * ext = strrchr(path, '.'); //get extension
     
@@ -52,28 +30,58 @@ void get_file(int newsockfd, char * path) {
     if (!ext)
 	ext = "html";
 
-    printf("Extension: %s\n", ext);
+    return ext;
+}
+
+void get_file(int newsockfd, char * path) {
+    char * OK = "HTTP/1.1 200 OK\n"
+    "Content-type: %s\n";
     
+    char * MISS = "HTTP/1.1 404 NOT FOUND\n"
+    "Content-type: text/html\n"
+    "\n"
+    "<html><body><h1><b>404 File not found\n</b></h1></body></html>";
+    
+    char response[2048];
+    int filefd = -1;
+    char * header;
+    int i = 0;
+    char c;
+
+    memset(response, 0, 2048);	//reset memory
+
+    filefd = open(++path, O_RDONLY );
+    printf("Result of open: %d\n", filefd);
+
+    //File not found
+
+    if ( filefd < 0 ){ 	
+	write(newsockfd, MISS, 2048); 
+	error("ERROR, file can't be retrieved");
+    }
+
+    char * ext = getExt(path);
+
+    //printf("Extension: %s\n", ext);
+   
+    // Determine filetype and format appropriate response
     if (strcmp(ext, ".jpg") == 0 || strcmp(ext, ".jpeg") == 0){
 	// Do stuff for jpg
 	header = "image/jpeg\n";
 	snprintf(response, 2048, OK, header);
-	write(newsockfd, response, 2048);
-	printf("Response jpg: %s", response);
+	write(newsockfd, response, strlen(response));
 	}
     else if (strcmp(ext, ".gif") == 0 ) {
 	// Do stuff for gif
 	header = "image/gif\n";
 	snprintf(response, 2048, OK, header);
-	write(newsockfd, response, 2048);
-	printf("Response gif: %s", response);
+	write(newsockfd, response, strlen(response));
     }
     else {
 	// Do stuff for text/html
 	header = "text/html\n";
 	snprintf(response, 2048, OK, header);
-	write(newsockfd, response, 2048);
-	printf("Response html: %s", response);
+	write(newsockfd, response, strlen(response));
     }
     
     while( (i = read(filefd, &c, 1))) {
@@ -96,21 +104,21 @@ void request_handler(int newsockfd) {
     n = read(newsockfd,buffer,2048);
     if (n < 0) error("ERROR reading from socket");
     
+    // Split the request into parts
     char method[sizeof(buffer)];
     char protocol[sizeof(buffer)];
     char path[sizeof(buffer)];
     
-    // Split the request into parts
     sscanf(buffer, "%s %s %s", method, path, protocol);
-    printf( "%s\n",buffer);
+    //printf( "%s\n",buffer);
 
+    // Ensure accepted protocol
     if (strcmp(protocol, "HTTP/1.1") || strcmp(protocol, "HTTP/1.0") ){
 	if (strcmp(method, "GET") == 0){
 	    get_file(newsockfd, path);    
 	}
     } else {
 	printf("protocol: %s, method: %s", protocol, method);
-	//write(newsockfd, NOT, 2048);
 	error("ERROR, protocol not supported!");
     }
 
@@ -147,7 +155,7 @@ int main(int argc, char *argv[])
      
      listen(sockfd,5);	//5 simultaneous connection at most
     
-
+    // While loop to enable webserver to run indefinitely
     while(1) { 
 	 //accept connections
 	 newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
