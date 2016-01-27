@@ -1,4 +1,5 @@
 CS118 webserver
+Ty Giacalone 404001782
 
 To run:
 1. $ make
