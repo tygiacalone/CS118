@@ -16,6 +16,7 @@ void error(char *msg)
     exit(1);
 }
 
+// Get filetype extension from filepath
 char * getExt(char * path) {
 
     char * ext = strrchr(path, '.'); //get extension
@@ -33,6 +34,7 @@ char * getExt(char * path) {
     return ext;
 }
 
+// Open file, format header, send response
 void get_file(int newsockfd, char * path) {
     char * OK = "HTTP/1.1 200 OK\n"
     "Content-type: %s\n";
@@ -54,7 +56,6 @@ void get_file(int newsockfd, char * path) {
     //printf("Result of open: %d\n", filefd);
 
     //File not found
-
     if ( filefd < 0 ){ 
 	//printf("%s", MISS);
 	write(newsockfd, MISS, 2048); 
@@ -95,6 +96,7 @@ void get_file(int newsockfd, char * path) {
     }
 }
 
+// Parse client's request, check for proper protocol and method, call get_file()
 void request_handler(int newsockfd) {
     int n = -1;
     char buffer[2048];

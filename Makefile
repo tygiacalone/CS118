@@ -1,7 +1,7 @@
 CC=gcc
 
 webserver: webserver.c
-	$(CC) webserver.c -Wall -o webserver
+	$(CC) webserver.c -o webserver
 
 clean:
 	rm webserver
